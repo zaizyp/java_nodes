@@ -1,0 +1,20 @@
+## 设计模式
+### 单例模式
+```java
+class Singleton{
+	private static Singleto uniqueInstance;
+  
+	private Singleton(){}
+  
+	public static Singleton getUniqueInstance(){
+    	if(uniqueInstance==null){
+			synchronize(Singleton.class){
+				if(uniqueInstance==null)
+					uniqueSingleton = new Singleton();
+			}
+		}
+		retuen uniqueInstace;
+	}
+
+}
+```
