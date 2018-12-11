@@ -221,7 +221,7 @@ public class TestComplexPlus {
 ```
 　　这里，编译器会将“+”转换成StringBuilder，但是创建StringBuilder对象的位置却在for语句内部。这就意味着每执行一次循环，就会创建一个StringBuilder对象（对于本例来说，是创建了10个StringBuilder对象），虽然Java有垃圾回收器，但这个回收器的工作时间是不定的。如果不断产生这样的垃圾，那么仍然会占用大量的资源。解决这个问题的方法就是在程序中直接使用StringBuilder来连接字符串，代码如下：
 ```java
-import java.util.*
+import java.util.*;
 
 public class TestStringBuilder {
     public static void main(String[] args) {
@@ -249,4 +249,98 @@ for (int i = 0; i < 10; i++) {
 for (int i = 0; i < 10; i++) {
     sb.append(rand.nextInt(1000) + " ");
 }
+```
+　　从上面的代码可以看出，Java编译器将“+”编译成StringBuilder，这样for语句每循环一次，又创建了一个StringBuilder对象。
+　　如果将上面的代码在JDK1.4下编译，必须将StringBuilder改为StringBuffer，而JDK1.4将“+”转换为StringBuffer（因为JDK1.4并没有提供StringBuilder类）。StringBuffer和StringBuilder的功能基本一样，只是StringBuffer是线程安全的，而StringBuilder不是线程安全的。因此，StringBuilder的效率会更高。
+### 6、Java中的日期和时间
+#### 6.1、如何获得年月、小时分钟秒？
+```java
+public class DataTimeTest {
+    pulic static void main(String[] args) {
+        Calendar cal = new Calender.getInstance();
+        System.out.println(cal.get(Calender.YEAR));
+        System.out.println(cal.get(Calender.MONTH));// 0 - 11
+        System.out.println(cal.get(Calender.DATE));
+        System.out.println(cal.get(Calender.HOUR_OF_DAY));
+        System.out.println(cal.get(Calender.MINUTE));
+        System.out.println(cal.get(Calender.SECOND));
+        // Java 8
+        LocalDataTime dt = LocalDataTime.now();
+        System.out.println(dt.getYear());
+        System.out.println(dt.getMonthValue());
+        System.out.println(dt.getDayOfMonth());
+        System.out.println(dt.getHour());
+        System.out.println(dt.getSecond());
+    }
+}
+```
+#### 6.2、如何获得从1970年1月1日0时0分0秒到现在的毫秒数
+```java
+Calender cal = Calender.getInstance().getTimeInMillis();//第一种方式
+System.currentTimeMillis();//第二种方式
+//Java 8
+Clock.systemDefaultZone().millis();
+```
+#### 6.3、如何格式化日期？
+　　1) java.text.DataFormat的子类（如SimpleDateFormat类）中的format(Date)方法可将日期格式化。
+　　2) Java8中可以用java.time.format.DateTimeFormatter来格式化时间日期，代码如下所示：
+```java
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+class DateFormatTest {
+    public static void mian(String[] args) {
+        SimpleDateFormat oldFormatter = new SimpleDateFormat("yyyy/MM/dd");
+        Date date1 = new Date();
+        System.out.println(oldFormatter.format(date1));
+        // Java 8
+        DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        LocalDate date2 = LocalDate.now();
+        System.out.println(date2.format(newFormatter));
+    }
+}
+```
+　　补充:Java的时间日期API一直以来都是被诟病的东西，为了解决这一问题，Java8中引入了新的时间日期API，其中包括LocalDate、LocalTime、LocalDateTime、Clock、Instant等类，这些类的设计都使用了不变模式，因此是线程安全的设计。
+#### 6.4、Java8的日期特性？
+
+
+## 六、Java的数据类型
+### 1、Java的基本数据类型都有哪些各占几个字节
+|  类型  |字节数|    数据表示范围    |
+|--------|-----|-------------------|
+|byte   |1     |-128~127|
+|short  |2     |-32768~32767|
+|int    |4     |-2147483648~2147483647|
+|long   |8     |-2*63 ~ 2*63-1|
+|float  |4     |-3.403E38~3.403E38|
+|double |8     |-1.798E308~1.798E308|
+|char   |2     |表示一个字符，如('a','A','0','家')|
+|boolean|1     |只有两个值true与false|
+### 2、`short s1 = 1; s1 = s1 +1;`有错吗？`short s1 = 1; s +=1;`有错吗？
+　　前者不正确，后者正确。对于`short s1 = 1; s1 = s1 +1;`由于1是int类型，因此s1+1运算结果也是int型，需要强制转换类型才能赋值给short型。而`short s1 = 1; s +=1;`可以正常编译，因为`s1 += 1;`相当于`s1 = (short)(s1 + 1);`其中有隐含的强制类型转换
+### 3、数据类型之间的转换
+#### 3.1、字符串如何转基本数据类型？
+　　调用基本数据类型对应的包装类中的方法parseXXX(String)或valueOf(String)即可返回相应的基本类型。
+#### 3.2、基本数据类型如何转字符串？
+　　一种方法时将基本数据类型与空字符串("")连接(+)即可获得其对应的字符串；另一种方法时调用String类中的valueOf()方法犯规相应的字符串
+## 七、Java的IO
+### 1、java中有几种类型的流
+　　按照流的方向分：输入流（inputStream）和输出流（outputStream）  
+　　按照事先功能分：字节流（可以从或向一个特定的地方（节点）读写数据。如FileReader）和处理流（是对一个已存在的流的连接和封装，通过所封装的流的功能调用实现数据读写。如BufferReader。处理流的构造方法总是要带一个其他的流对象做参数。一个流对象经过其他流的多次包装，称为流的链接）  
+　　按照处理数据的单位：字节流和字符流。字节流继承于InputStream和OutputStream，字符流继承于Reader和Writer  
+### 2、字节流如何转换为字符流
+字节输入流转字符输入流通过InputStreamReader实现，该类的构造函数可以传入InputStream对象  
+字节输出流转字符输出流通过OutputStreamWriter实现，该类的构造函数可以传入OutputStream对象。
+### 3、如何将一个java对象序列化到文件里
+在Java中能够被序列化的类必须先实现Serializable接口，该接口没有任何抽象方法只是起到一个标记作用。  
+```java
+//对象输出流
+    ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File("D://obj")));
+    objectOutputStream.writeObject(new User("zhangsan",100));
+    objectOutputStream.close();
+//对象输入流
+    ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File("D://obj")));
+    User user = (User)objectInputStream.readObject();
+    objectInputStream.close();
 ```
