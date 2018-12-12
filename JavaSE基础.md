@@ -534,3 +534,7 @@ public void clear() {
 　　对象数组大小的改变只有在put操作时有可能发生，由于HashEntry对象数组对应的变量是volatile类型的，因此可以保证如HashEntry对象数组大小发生改变，读操作可以看到最新的对象数组大小。  
 　　在获取到了HashEntry对象之后，怎么能保证它及其next属性构成的链表上的对象不会改变呢？这点ConcurrentHashMap采用了一个简单的方式，即HashEntry对象中的hash,key,next属性都是final的，这也就意味着没办法插入一个HashEntry对象到基于next属性构成的链表中间或者末尾。这样就可以保证当获取到HashEntry对象后，其基于next属性构建的链表是不会发生变化的。
 　　ConcurrentHashMap默认情况下采用将数据分为16个段进行存储，并且16个段分别各自持有不同的锁Segment，锁仅用于put和remove等改变集合对象的操作，基于volatile及HashEntry链表的不变性实现了读取的不加锁。这些方式使得ConcurrentHashMap能够保持极好的并发支持，尤其是其对于读远比插入和删除频繁的Map而言，而采用这些也可谓是对于Java内存模型、并发深刻掌握的体现。
+### 5、List的三个子类的特点
+ArrayList 底层结构是数组，查询快、增删慢  
+LinkedList 底层结构的链表型的，增删快，查询慢  
+Vector 底层是数组结构 线程安全的，增删慢，查询慢
