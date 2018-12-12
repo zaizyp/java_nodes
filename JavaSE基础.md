@@ -131,7 +131,7 @@ public int getNum(){
 ### 1、`Math.round(11.5)`等于多少？`Math.round(-15)`又等于多少
 　　`Math.round(11.5)`的返回值是12，`Math.round(-11.5)`的返回值是-11.四舍五入的原理是在参数上加上0.5然后进行取整
 ### 2、switch是否能作用在byte上，是否能作用在long上，是否能作用在String上？
-　　在Java5以前stitch(expr)中，expr只能是byte、short、char、int。从Java5开始，Java中引入了枚举类型，expr也可以是enum类型
+　　在Java5以前stitch(expr)中，expr只能是byte、short、char、int。从Java5开始，Java中引入了枚举类型，expr也可以是enum类型。从Java7开始，expr也可以是String对象。
 ### 3、数组有没有length()方法？String有没有length()方法？
 　　数组没有length()方法，而是又length属性。String有length()方法。在JavaScript中，获得字符串的长度时通过length属性得到的，这一点容易和Java混淆
 ### 4、String、StringBuilder、StringBuffer的区别？
@@ -408,14 +408,14 @@ Collections.synchronizedSet(s);
 ### 3、ArrayList内部是用什么实现的？
 　　（回答这样的问题，不要只答个皮毛，可以再介绍一下ArrayList内部是如何实现数组的增加和删除的，因为数组在创建的时候长度是固定的，那么久有个问题我们往ArrayList中不断的添加对象，它是如何管理这些数组的呢？）
 　　ArrayList内部是用Object[]实现的。接下来我们分别分析ArrayList的构造、add、remove、clear方法的实现原理。
-　　一、构造函数
+#### 3.1、构造函数
 　　1) 空构造
 ```java
 public ArrayList() {
     array = EmptArray.OOJECT;
 }
 ```
-　　array是一个Object[]类型，当我们new一个空参构造时系统调用了EmptArray.OBJECT属性，EmptArray仅仅是一个系统的类库，该类源码如下：
+　　array是一个Object[]类型，当我们new一个空参构造时系统调用了EmptArray.OBJECT属tfyfsghhgg性，EmptArray仅仅是一个系统的类库，该类源码如下：
 ```java
 public final class EmptArray {
 
@@ -432,4 +432,105 @@ public final class EmptArray {
     public static final StackTraceElement[] STACK_TRACE_ELEMENT = new StackTraceElement[0];
 }
 ```
-　　也就是说当我们new一个空参ArrayList的时候，系统内部使用了一个new Object[0]数组。
+　　也就是说当我们new一个空参ArrayList的时候，系统内部使用了一个new Object[0]数组。  
+　　2) 带参构造函数1
+```java
+public ArrayList(int capacity) {
+    if (capatity < 0) {
+        throw new IllegalArgumentException("capatity < 0 :" + capatity);
+    }
+    array = (capatity ==0 ? EmptyArrar.OBJECT : new Object[capacity]);
+}
+```
+　　该构造函数传入一个int值，该值作为数组的长度值。如果该值小于0，则抛出一个运行时异常。如果等于0，则使用一个空数组，如果大于0，则创建一个长度为该值的新数组。  
+　　3) 带参构造2
+```java
+public ArrayList(Collection<? extends E> collection) {
+    if (collection == null) {
+        throw new NullPointerException("collection == null");
+    }
+    Object[] a = collection.toArray();
+    if(a.getClass() != Object.clsaa) {
+        Object[] newArray = new Object[a.length];
+        System.arraycopy(a, 0, newArray, 0, a.length);
+        a = newAray;
+    }
+    array = a;
+    size = a.length;
+}
+```
+　　如果调用构造函数的时候传入了一个Collection的子类，那么先判断该集合是否为null，为null则抛出空指针异常。如果不是则将该集合转换为数组a，然后将该数组赋值给成员变量array，将该数组的长度作为成员变量size。这里面它先判断a.getClass是否等于Object[].class,其实一般是相等的，我也暂时没有想明白为什么多加了这个判断，toArray方法时Collection接口定义的，因此其所有的子类都有这样的方法，list集合的toArray和Set集合的toArray返回都是Object[]数组。
+　　这里讲些题外话，其实在看Java源码的时候，作者的很多意图都很费人心思，我能知道他的目标是啥，但是不知道他为何这样写。比如对于ArrayList，array是他的成员变量，但是每次在方法中使用该成员变量的时候作者都会重新在方法中开辟一个局部变量，然后给局部变量赋值为array，然后再使用，有人可能会说这是为了防止并发修改array，毕竟array是成员变量，大家都可以使用因此需要将array变为局部变量，然后再使用。这样的说法并不是都成立的，也许有时候就是老外们写代码的一个习惯而已。
+#### 3.2、add方法
+　　add方法有两个重载，这里只研究最简单的那个。
+```java
+@Override
+public boolean add(E object) {
+    Object[] a = array;
+    int s = size;
+    if (s == a.length) {
+        Object[] newArray = new Object[s + (s < (MIN_CAPATITY_INCREMENT / 2) ? MIN_CAPATITY_INCREMENT : s >> 1)];
+        System.arraycopy(a, 0, newAray, 0, s);
+        array = a = newAray;
+    }
+    a[s] = object;
+    size = s + 1；
+    modCount++;
+    return true;
+}
+```
+　　1、首先将成员变量array赋值给局部变量a，将成员变量的size赋值给局部变量s  
+　　2、判断集合的长度是否等于数组的长度（如果集合的长度已经等于数组的长度了，说明数组已经满了，该重新分配新数组的），重新分配数组的时候需要计算新分配内存的空间大小，如果当前的长度小于MIN_CAPACITY_INCREMENT/2（这个常量值是12，除以2也就是6，如果当前集合的长度小于6）则分配12个长度，如果集合长度大于6则分配当前长度的一半长度，这里面用到了三元运算符和位运算符，s >> 1，意思就是将s往右移动一位，相当于s=s/2，只不过位运算是效率最高的运算  
+　　3、将新添加的Object对象作为数组的a[s]个元素  
+　　4、修改集合的长度size为s+1  
+　　5、modCount++，该变量是父类中声明的，用于记录集合修改的次数，记录集合修改的次数是为了防止在用迭代器迭代集合时避免发生修改异常，或者说用于判断是否出现并发修改异常的  
+　　6、return true，这个返回值意义不大，因为一直返回true，除非报了一个运行时异常。
+#### 3.3、remove方法
+　　　　remove方法有两个重载，我们只研究remove(int index)方法。
+```java
+@Override
+public E remove (int index) {
+    Object[] a = array;
+    int s = size;
+    if (index >= s) {
+        throw IndexOutOfBoundsException(index, s);
+    }
+    E result = (E) a[index];
+    System.arraycopy(a, index + 1, a, index, --s -index);
+    a[s] = null; //Prevent memory leak
+    size = s;
+    modCount++;
+    return result;
+}
+```
+　　1、先将成员变量array和size赋值给局部变量a和s  
+　　2、判断形参index是否大于等于集合的长度，如果长了则抛出运行时异常  
+　　3、获取数组中角标为index的对象result，该对象作为方法的返回值  
+　　4、调用System的arraycopy函数，拷贝原理：只需要将该数组后面区域整体往前移动一个位置即可  
+　　5、接下来就是很重要的一个工作，因为删除了一个元素，而集合整体向前移动了一位，因此需要将集合最后一个元素设置为null，否则就可能内存泄漏  
+　　6、重新给成员变量array和size赋值  
+　　7、记录修改次数  
+　　8、返回删除的元素（让用户再看最后一眼）
+#### 3.4、clear方法
+```java
+@override
+public void clear() {
+    if (size != 0) {
+        Arrays.fill(array, 0, size, null);
+        size = 0;
+        modCount++;
+    }
+}
+```
+　　如果集合长度不等于0，则将数组的所有值都设置为null，然后将成员变量size设置为0即可，最后让修改记录加1
+### 4、并发集合和普通集合如何区别？
+　　并发集合常见的有ConcurrentHashMap,ConcurrentLinkedQueue,ConcurrentLinkedDeque等。并发集合位于java.util.concurrent包下，是JDK1.5之后才有的，主要作者是Doug Lea完成的  
+　　在java中有普通集合、同步（线程安全）的集合、并发集合，普通集合通常性能最该，但是不保证多线程的安全性和并发的可靠性。线程安全集合仅仅是给集合添加了synchronized同步锁，严重牺牲了性能，而且对并发的效率就更低了，并发集合则通过复杂的策略不仅保证了多线程的安全又提高了并发时的效率。
+　　参考阅读：  
+　　ConcurrentHashMap是线程安全的HashMap的实现，默认构造同样有initialCapatity和loadFactor属性，不过还多了一个concurrentLevel属性，三属性默认值分别为16、0.75、16。其内部使用锁分段技术，维持着锁Segment的数组，在Segment数组中又存放着Entity[]数组，内部hash算法将数据较均匀分布在不同锁中。  
+　　**put操作**：并没有在此方法加上synchronized，首先对key.hashCode进行hash操作，得到key的hash值。hash操作的算法和map的也不同，根据此hash值计算并获取其对应的数组中Segment对象(继承自ReentrantLock)，接着调用此Segment对象的put方法来完成当前操作。  
+　　CurrentHashMap基于concurrentLevel划分出了多个Segment来对key-value进行存储，从而避免每次put操作都得锁住整个数组。在默认的情况下，最佳情况可允许16个线程并发无阻塞的操作集合对象，尽可能地减少并发时的阻塞现象。  
+　　**get(key)**：首先对key.hashCode进行hash操作，基于其值找到对应的Segment对象，调用其get方法完成当前操作。而Segment的get操作首先通过hash值和对象数组大小减1的值进行按位与来获得操作数组上对应位置的HashEntry。而在这个步骤中，可能会因为对象数组大小的改变，以及数组上对应位置的HashEntry产生不一致性，那么ConcurrentHashMap是如何保证的呢？  
+　　对象数组大小的改变只有在put操作时有可能发生，由于HashEntry对象数组对应的变量是volatile类型的，因此可以保证如HashEntry对象数组大小发生改变，读操作可以看到最新的对象数组大小。  
+　　在获取到了HashEntry对象之后，怎么能保证它及其next属性构成的链表上的对象不会改变呢？这点ConcurrentHashMap采用了一个简单的方式，即HashEntry对象中的hash,key,next属性都是final的，这也就意味着没办法插入一个HashEntry对象到基于next属性构成的链表中间或者末尾。这样就可以保证当获取到HashEntry对象后，其基于next属性构建的链表是不会发生变化的。
+　　ConcurrentHashMap默认情况下采用将数据分为16个段进行存储，并且16个段分别各自持有不同的锁Segment，锁仅用于put和remove等改变集合对象的操作，基于volatile及HashEntry链表的不变性实现了读取的不加锁。这些方式使得ConcurrentHashMap能够保持极好的并发支持，尤其是其对于读远比插入和删除频繁的Map而言，而采用这些也可谓是对于Java内存模型、并发深刻掌握的体现。
