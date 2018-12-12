@@ -393,3 +393,43 @@ public class HashMapTest {
 	}
 }
 ```
+### 2、集合的安全性问题
+　　请问ArrayList、HashSet、HashMap是线程安全的吗？如果不是我想要线程安全的集合怎么办？   
+　　我们都看过上面那些集合的源码，每个方法否没有加锁，显然都不是线程安全的。话又说过来如果他们安全了也就没有第二问了。  
+　　在集合Vector和HashTable倒是线程安全的。你打开源码会发现其实就是把各自核心方法添加上了`synchronized`关键字  
+　　Collections工具类提供了相关的API，可以让上面那3个不安全的集合变为安全的。  
+```java
+Collections.synchronizedCollection(c);
+Collections.synchronizedList(list);
+Collections.synchronizedMap(m);
+Collections.synchronizedSet(s);
+```
+　　上面几个函数都有对应的返回值类型，传入上面类型返回什么类型。打开源码其实实现原理非常简单，就是将集合的核心方法加上了`synchronized`关键字。  
+### 3、ArrayList内部是用什么实现的？
+　　（回答这样的问题，不要只答个皮毛，可以再介绍一下ArrayList内部是如何实现数组的增加和删除的，因为数组在创建的时候长度是固定的，那么久有个问题我们往ArrayList中不断的添加对象，它是如何管理这些数组的呢？）
+　　ArrayList内部是用Object[]实现的。接下来我们分别分析ArrayList的构造、add、remove、clear方法的实现原理。
+　　一、构造函数
+　　1) 空构造
+```java
+public ArrayList() {
+    array = EmptArray.OOJECT;
+}
+```
+　　array是一个Object[]类型，当我们new一个空参构造时系统调用了EmptArray.OBJECT属性，EmptArray仅仅是一个系统的类库，该类源码如下：
+```java
+public final class EmptArray {
+
+    public static final boolean[] BOOLEAN = new boolean[0];
+    public static final byte[] BYTE = new byte[0];
+    public static final char[] CHAR = new char[0];
+    public static final double[] DOUBLE = new double[0];
+    public static final int[] INT = new int[0];
+
+    public static final Class<?>[] CLASS = new Class[0];
+    public static final Object[] OBJECT = new Object[0];
+    public static final String[] STRING = new String[0];
+    public static final Throwable[] THROWABLE = new Throwable[0];
+    public static final StackTraceElement[] STACK_TRACE_ELEMENT = new StackTraceElement[0];
+}
+```
+　　也就是说当我们new一个空参ArrayList的时候，系统内部使用了一个new Object[0]数组。
