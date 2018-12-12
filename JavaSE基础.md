@@ -344,3 +344,52 @@ class DateFormatTest {
     User user = (User)objectInputStream.readObject();
     objectInputStream.close();
 ```
+### 4、字节流和字符流的区别
+　　字节流读取的时候，读到一个字节就返回一个字节；字符流使用了字节流读到一个或多个字节（中文对应的字节是两个，在UTF-8码表中是3个字节）时，先去查指定的码表，将查到的字符返回。字节流可以处理所有类型数据，如：图片，MP3，AVI视频文件，而字符流只能处理字符数据。只要是处理纯文本数据，就要优先考虑使用字符流，除此之外都用字节流。字节流主要是操作byte类型数据，以byte数组为准，主要操作类就是OutputStream、InputStream  
+　　字符流处理的单元为2个字节的Unicode字符，分别操作字符、字符数组或字符串，而字节流处理单元为1个字节，操作字节和字符数组。所以字符流是由Java虚拟机将字节转化为2个字节的Unicode字符为单位的字符而成的，所以它对多国语言支持性比较好！如果是音频文件、图片、歌曲，就用字节流好点，如果关系到中文（文本）的，用字符流好点。在程序中一个字符等于两个字节，java提供了Reader、Writer两个专门操作字符流的类。
+### 5、如何实现克隆对象
+　　有两种方式：  
+1) 实现Cloneable接口并重写Object类中的clone()方法；  
+2) 实心Serializable接口，通过对象的序列化和反序列化实现克隆，可以实现真正的深度克隆  
+　　注意：基于序列化和反序列化实现的克隆不仅仅是深度克隆，更重要的是通过泛型限定，可以检查出要克隆的对象是否支持序列化，这项检测是编译器完成的，不是在运行时抛出异常，这种方案明显优于使用Object类的clone方法克隆对象。让问题在编译的时候暴露出来总是好过把问题留到运行时。
+### 6、什么是Java序列化，如何实现Java序列化
+　　序列化就是一种用来处理对象流的机制，所谓对象流也就是将对象的内容进行流化。可以对流化后的对象进行读写操作，也可以将流化后的对象传输于网络之间。序列化是为了解决在对象进行读写操作时引发的问题。  
+　　序列化的实现：将需要被序列化的类实现 Serializable 接口，该接口没有需要实现的方法，`implments Serializable`只是为了标注该对象时可被序列化的，然后使用一个输出流（如：FileOutputStream）来构造一个ObjectOutputStream（对象流）对象，接着，使用ObjectOutputStream对象的writerObject(Object obj)方法就可以将参数为obj的对象写出（即保存其状态），要恢复的话则用输入流。
+## 八、Java的集合
+### 1、HashMap排序题，上机题。（这题很重要）
+　　已知一个HashMap<Integer, User>集合，User有name(String)和age(int)属性。请写一个方法实现对HashMap的排序功能，该方法接收HashMap<INteger, User>为形参，返回类型为HashMap<Integer, User>，要求HashMap中的User的age倒序进行排序。排序时key=value键值对不得拆散。  
+注意：要做这道题必须对集合体系结构非常的熟悉。HashMap本身就是不可排序的，但是该道题偏偏让给HashMap排序，那我们就得想在API中有没有这样的Map结构是有序的，LinkedHashMap，对的，就会它，它是Map结构，也是链表结构，有序的，更可喜的是它是HashMap的子类，我们返回LinkedHashMap<Integer,User>即可，还符合面向接口（父类编程思想）。  
+　　但凡是对集合的操作，我们应该保持一个原则就是能用JDK中的API就用JDK中的API，比如排序算法我们不应该去用冒泡或者选择，而是首先想到用Collections集合工具类。
+```java
+//对HashMap的排序
+public class HashMapTest {
+	public static void main(String[] args) {
+		HashMap<Integer, User> map = new HashMap<>();
+		map.put(1, new User("张三", 33));
+		map.put(2, new User("李四", 28));
+		map.put(3, new User("王五", 45));
+		map.put(4, new User("大明", 45));
+		map.put(5, new User("小李", 21));
+		map.put(6, new User("小红", 89));
+		System.out.println(map);
+		HashMap<Integer,User> mapSort = hashMapSort(map);
+		System.out.println(mapSort);
+	}
+
+	public static HashMap<Integer, User> hashMapSort(HashMap<Integer, User> map) {
+		Set<Entry<Integer,User>> entrySet = map.entrySet();
+		List<Entry<Integer,User>> list = new ArrayList(entrySet);
+		Collections.sort(list, new Comparator<Entry<Integer,User>>() {
+			@Override
+			public int compare(Entry<Integer, User> o1, Entry<Integer, User> o2) {
+				return o2.getValue().getAge() - o1.getValue().getAge();
+			}
+		});
+		LinkedHashMap<Integer, User> result = new LinkedHashMap<>();
+		for (Entry<Integer, User> entry : list) {
+			result.put(entry.getKey(), entry.getValue());
+		}
+		return result;
+	}
+}
+```
