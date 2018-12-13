@@ -538,3 +538,12 @@ public void clear() {
 ArrayList 底层结构是数组，查询快、增删慢  
 LinkedList 底层结构的链表型的，增删快，查询慢  
 Vector 底层是数组结构 线程安全的，增删慢，查询慢
+### 6、List和Map、Set的区别
+
+#### 6.1 结构特点
+　　List和Set是存储单列数据的集合，Map是存储键和值的双列数据的集合；List中存储的数据是有顺序的，并且允许重；Map中存储的数据是没有顺序的，其键是不能重复的，它的值是可以重复的；Set中存储是数据是无序的，且不允许有重复，但元素在集合中的位置由元素的hashCode决定，位置是固定的（Set集合根据hashCode来进行存储，所以位置是固定的，但是位置不是用户可以控制的，所以对用户来说Set中的元素还是无序是）
+#### 6.2 实现类
+　　List接口有三个实现类（LinkedList：基于链表实现，链表内存是散乱的，每一个元素存储本身内存地址的同时还存储下一个元素的地址。链表增删快，查找慢；ArryList：基于数组实现，非线程安全，效率高，便于索引，但不便于插入删除；Vector：基于数组实现，线程安全，效率低）  
+　　Map接口有三个实现类（**HashMap:** 基于hash表的Map接口实现，非线程安全，高效，支持null值和null键；**HashTable** 线程安全，低效，不支持null值和null键；**LinkedHashMap** 是HashMap是一个子类，保存了记录的插入顺序；SortMap接口：TreeMap，能够把它保存的记录根据键排序，默认是键值的升序排序）
+　　Set接口有两个实现类（HashSet：底层是由HashMap实现，不允许集合中有重复的值，使用该方式时需要重写equals()和hashCode()方法；LinkedHashSet：继承自HashSet，同时又基于LinkedHashMap来进行实现，底层使用的是LinkedHashMap）
+#### 6.3 区别
