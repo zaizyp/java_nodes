@@ -715,9 +715,9 @@ public static void main(String[] args) {
 ## 九、Java的多线程并发库
 　　对于Java程序员来说，多线程在工作中的使用场景还是比较常见的，而仅仅掌握了Java中的传统多线程机制，还是不够的。在JDK1.5之后，Java增加的并发库中提供了很多优秀的API，在实际开发中用的比较多。因此在看具体的面试题之前我们有必要对这部分知识做一个全面的了解  
 　　（一）多线程基础知识--传统线程机制的回顾  
-　　（1）传统使用类Thread和接口Runnable实现  
-　　1、在Thread子类覆盖的run方法中编写运行代码
-　　方式一：
+　　（1）传统使用类Thread和接口Runnable实现   
+　　1、在Thread子类覆盖的run方法中编写运行代码  
+　　方式一：  
 ```java
 new Thread() {
     @override
@@ -748,4 +748,62 @@ new Thread(new Runnable(){
     }
 }).start();
 ```
-　　
+　　3、总结  
+　　查看Thread类的run()方法的源代码，可以看到其实这两种方式都是在调用Thread对象的run方法，如果Thread类的run方法没有被覆盖，并且为该Thread对象设置了一个Runnable对象，该run方法会调用Runnable对象的run方法  
+　　（3）线程互斥与同步  
+　　在引入了多线程之后，由于线程执行的异步性，会给系统造成混乱，特别是在急用临界资源时，如多个线程急用同一台打印机，会使打印结果交织在一起，难于区分。当多个线程急用共享变量、表格、链表时，可能会导致数据处理出错，因此线程同步的主要任务是使并发执行的各线程之间能够有效的共享资源和合作，从而使程序的执行具有可在观性。  
+　　当线程并发执行时，由于资源共享和线程协作，使用线程之间会存在以下两种制约关系。  
+　　1、间接相互制约。一个系统中的多个线程必然要共享某种系统资源，如共享CPU，共享I/O设备，所谓间接相互制约即源于这种资源共享，打印机就是最好的例子，线程A在使用打印机时，其他线程都要等待。  
+　　2、直接相互制约。这种制约主要是因为主线程之间的合作，如有线程A将计算结果提供给B作进一步处理，那么线程B在A将数据传达之前都将处于阻塞状态  
+　　间接相互制约可以称为**互斥**，直接相互制约可以称为**同步**，对于互斥可以理解成这样，线程A和线程B互斥访问某个资源则它们之间就会产生一个顺序问题--要么线程A等待线程B操作完毕，要么线程B等待线程A操作完毕，这其实就是线程同步了。因此，同步包括互斥，互斥其实是一种特殊的同步。  
+　　下面我们通过一道面试题来体会线程的交互  
+　　要求：子线程运行执行10次后，主线程在运行5次。这样交替执行三遍   
+```java
+public class ThreadTest {
+
+	public static void main(String[] args) {
+	    final Bussiness bussiness = new Bussiness();
+	    //子线程
+	    new Thread(new Thread() {
+	        @Override
+	        public void run(){
+	            for(int i = 0; i < 3; i++)
+	                bussiness.subMethod();
+	        }
+	    }).start();
+	    //主线程
+	    for(int i = 0; i < 3; i++)
+	        bussiness.mainMethod();
+	}
+}
+class Bussiness{
+    private boolean flag = false;
+
+    public synchronized void subMethod() {
+        while(flag) {
+            try {wait();} catch(InterruptedException e) {e.printStackTrace();}
+        }
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Thread.currentThread().getName()+"----"+i);
+        }
+        flag = true;
+        notify();
+    }
+    public synchronized void mainMethod() {
+        while(!flag){
+            try {wait();} catch(InterruptedException e) {e.printStackTrace();}
+        }
+        for (int i = 0; i < 5; i++)
+            System.out.println(Thread.currentThread().getName() + "----" +i);
+        flag = false;
+        notify();
+    }
+}
+```
+　　（4）线程局部变量ThreadLocal  
+　　- ThreadLocal 的作用和目的：用于实现线程内的数据共享，即对于相同的程序代码，多个模块在同一个线程中运行时要共享一份数据，而在另外线程中运行时又共享另外一份数据。  
+　　- 每个线程调用全局ThreadLocal对象的Set方法，在Set方法中，首先根据当前线程获取当前线程的ThreadLocalMap对象，然后往这个map中插入一条记录，key其实就是ThreadLocal对象，value是各自set方法传进去的值。也就是每个线程其实都有一份自己独享的ThreadLocal对象，该对象的key是ThreadLocal对象，值是用户设置的具体值。在线程结束时可以调用`ThreadLocal.remove()`方法，这样会更快释放内存，不调用也可以，因为线程结束后也可以自动释放相关的ThreadLocal变量  
+　　- ThreadLocal的应用场景：  
+　　　　- 订单处理包含一系列操作：减少库存量、增加一条流水台账、修改总账，这几个操作要在同一个事务中完成，通常也即同一个线程中进行处理，如果累加公司应收账款的操作失败了，则应该把前面的操作回滚，否则，提交所有操作，这些操作使用相同的数据库连接对象，而这些操作的代码分别位于不用的模块中  
+　　　　- 银行转账包含一系列操作：把转出账户的余额减少，把转入账户的余额增加，这两个操作要在同一个事务中完成，它们必须使用相同的数据库连接对象，转入和转出操作的代码分别是两个不同的账户对象的方法。
+　　　　- 例如Strus2的ActionContext，同一段代码被不同的线程调用运行时，该代码操作的数据是每一个线程各自的状态和数据，对于不同的线程来说，getContext方法拿到的对象都不相同，对同一个线程来说，不管调用getContext方法多少次和在哪个模块中调用getContext方法，拿到的都是同一个。  
