@@ -657,4 +657,95 @@ private static class Entry {
 }
 ```
 　　每个Entry对象reference列表中的一个元素，同时还有在LinkedList中它的上一个元素和下一个元素。一个有1000个元素的LinkedList对象将有1000个链接在一起的Entry对象，每个对象都对应于列表中的一个元素。这样的话，在一个LinkedList结构中将有一个很大的空间开销，因为它要存储这1000个Entry对象的相关信息。  
-　　ArrayList使用一个内置的数组来存储元素
+　　ArrayList使用一个内置的数组来存储元素，这个数组的起始容量时10，当数组需要增长时，新的容量按如下公式获得：新容量=（旧容量*3）/2+1,也就是说每一次容量大概会增长50%。这就意味着，如果你有一个包含大量元素的ArrayList对象，那么最终将会有很大的空间会被浪费掉，这个浪费是由ArrayList的工作方式本身造成的。如果没有足够的空间来存放新的元素，数组将不得不被重新进行分配以便能够增加新的元素。对数组进行重新分配，将会导致性能急剧下降。如果我们知道一个ArrayList将会有多少个元素，我们可以通过构造方法来指定容量。我们还可以通过trimToSize方法在ArrayList分配完毕之后去掉浪费的空间    
+　　三、总结  
+　　ArrayList和LinkedList在性能上各有各的优缺点，都有各自所试用的地方，总的来说可以描述如下：  
+　　1、对ArrayList和LinkedList而言，在列表末尾增加一个元素所花的开销都是固定的。对ArrayList而言，这要是在内部数组中增加一项，指向所添加的元素，偶尔可能会导致对数组重新进行分配；而对LinkedList而言，这个开销是统一的，分配一个内部Entry对象  
+　　2、在ArrayList的中间插入一个或删除一个有元素意味着这个列表中剩余的元素都会被移动；而在LinkedList的中间插入或删除一个元素的开销是固定的  
+　　3、LinkedList不支持高效的随机元素访问  
+　　4、ArrayList的空间浪费主要体现在在list列表的结尾预留一定的容量空间，而LinkedList的空间花费则体现在它的每一个元素都需要消耗相当的空间  
+　　可以这样说：当操作是在一列数据的后面添加数据而且不是在前面或中间，并且需要随机地访问其中的元素时，使用ArrayList会提供比较好的性能；当你的操作是在一列数据的前面或中间添加或删除数据，并且按照顺序访问其中的元素时，就应该使用LinkedList了。
+### 12、请用两个队列模拟堆栈结构
+　　两个队列模拟一个堆栈，队列是先进先出，而堆栈是后进后出。模拟如下：  
+　　队列a和b  
+　　(1) 入栈：a队列为空，b为空。例：则将“a,b,c,d,e”需要入栈的元素先放入a中，a进栈为“a,b,c,d,e”
+　　(2) 出栈：a队列目前的元素为“a,b,c,d,e”。将a队列依次加入到ArrayList集合a中。以倒序方法，将a中的集合取出，放入b队列中，再将b队列出列。代码如下：
+```java
+public static void main(String[] args) {
+    Queue<String> queue = new LinkedList<String>();   //a队列
+    Queue<Stirng> queue2 = new LinkedList<String>();  //b队列
+    Arraylist<String> a = new ArrayList<Sting>();     //arralist集合是中间参数
+    queue.offer("a");
+    queue.offer("b");
+    queue.offer("c");
+    queue.offer("d");
+    queue.offer("e");
+    System.out.print("进栈：");
+    //a队列依次加入list集合之中
+    for(String q : queue) {
+        a.add(q);
+        System.out.print(q);
+    }
+    //以倒序的方法取出（a队列依次加入list集合）之中的值，加入b队列
+    for(int i = a.size()-1; i > 0; i--) {
+        queue2.offer(a.get(i));
+    }
+    //打印出栈队列
+    System.out.println("");
+    System.out.print("出栈：");
+    for(String q : queue2) {
+        System.out.print(q);
+    }
+}
+```
+　　打印结果为（遵循栈模式先进后出）：
+```
+进栈：a b c d e
+出栈：e d c b a
+```
+### 13、Collection和Map的集成体系
+　　Collection：
+![Java集合Collection](/pic/Java集合Collection.png)
+　　Map:
+![Java集合Collection](/pic/Java集合Collection.png)
+### 14、Map中的key可以和value可以为null么
+　　HashMap对象的key和value值均可以为null  
+　　HashTable对象的key和value值均不可以为null  
+　　且两者的key值均不能重复，若添加key相同的的键值对，后面的value会自动覆盖前面的value，但不会报错  
+## 九、Java的多线程并发库
+　　对于Java程序员来说，多线程在工作中的使用场景还是比较常见的，而仅仅掌握了Java中的传统多线程机制，还是不够的。在JDK1.5之后，Java增加的并发库中提供了很多优秀的API，在实际开发中用的比较多。因此在看具体的面试题之前我们有必要对这部分知识做一个全面的了解  
+　　（一）多线程基础知识--传统线程机制的回顾  
+　　（1）传统使用类Thread和接口Runnable实现  
+　　1、在Thread子类覆盖的run方法中编写运行代码
+　　方式一：
+```java
+new Thread() {
+    @override
+    public void run() {
+        while(true) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+               e.printStackTrace();
+            }
+        }
+    }
+}.start();
+```
+　　2、在传递给Thread对象的Runnable对象的run方法中编写代码
+```java
+new Thread(new Runnable(){
+    @Override
+    public void run(){
+        while(true) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName());
+        }
+    }
+}).start();
+```
+　　
