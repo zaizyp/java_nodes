@@ -571,3 +571,90 @@ Vector 底层是数组结构 线程安全的，增删慢，查询慢
 　　　　8 出现：3次  
 　　　　2 出现：4次  
 　　　　int[] arr = {1,4,1,2,5,8,7,8,77,88,5,4,9,6,2,4,1,5};
+### 9、Java中ArryList和LinkedList区别
+　　ArryList和Vector使用了数组的实现，可以认为ArryList或者Vector封装了对内部数组的操作，比如先数组中添加，删除，插入新的元素或者数据的扩展和重定向。  
+　　LinkedList使用了循环双向链表数据结构。与基于数组的ArryList相比，这是两种截然不同的实现技术，这也决定了它们将适用于完全不同的工作场景。  
+　　LinkedList链表由一系列表项连接而成。一个表项总是包含3个部分：元素内容，前驱表和后驱表，如图所示：  
+![链表结构](/pic/链表结构.png)
+　　在下图展示了一个包含3个元素的LinkedList的各个表项间的连接关系。在JDK的实现中，无论LinkedList是否为空，链表内部都有一个header表项，它既表示链表的开始，也表示链表的结尾。表项header的后驱表项表便是链表中第一个元素，表项header的前驱表项便是链表中最后一个元素。  
+![双向链表结构](/pic/双向链表结构.png)
+### 10、`List a = new ArrayList()`和`ArrayList a = new ArrayList()`的区别
+　　`List a = new Arraylist()`这句创建了一个ArrayList对象后把引用指向了List。此时它是一个List对象了，有些ArrayList有但是List没有的属性和方法，它就不能再用了。而`ArrayList a = new ArrayList()`创建对象则保留了ArrayList的所有属性。所以需要用到ArrayList独有的方法的时候不能用前者。
+### 11、要对集合进行更新操作时，ArrayList和LinkedList哪个更合适
+　　1) ArrayList是实现了基于动态数组的数据结构，LinkedList基于链表的数据结构  
+　　2) 如果集合数据是对于集合随机访问get和set，ArrayList绝对由于LinkedList，因为LinkedList要移动指针  
+　　3) 如果集合数据是对于集合新增和删除操作add和remove，LinkedList比较占优势，因为ArrayList要移动数据  
+　　ArrayList和LinkedList是两个集合类，用于存储一系列的对象引用（references）。例如我们可以用可以用ArrayList来存储一系列的String或者Integer。那么ArrayList和LinkedList在性能上有什么差别呢？什么时候应该用ArrayList什么时候又应该用LinkedList呢？  
+　　一.时间复杂度
+　　首先一点关键的是，ArrayList的内部实现是基于基础的对象数组的，因此，它使用get方法访问列表中的任意一个元素时（random access），它的速度要比LinkedList快。LinkedList中的get方法时按照顺序从列表的一端开始检查，直到另外一端。对于LinkedList而言，访问列表中的某个指定元素没有更快的方法了  
+　　假设我们又一个很大的列表，它里面的元素已经排序好了，这个列表可能是ArrayList类型的也可能是LinkedList类型的，现在我们对这个列表来进行二分查找（binary search），比较列表是ArrayList和LinkedList时的查询速度，看下面的程序：  
+```java
+public class TestList{
+    public static final int N = 5000;      //5000个数
+    public static List values;            //要查找的集合
+    //放入5000个数给value
+    static{
+        Integer vals[] = new Integer[N];
+        Random r = new Random();
+        for(int i = 0, currval = 0; i < N; i++){
+            vals[i] = new Integer(currval);
+            currval += r.nextInt(100)+1;
+        }
+        values = Arrays.asList(vals);
+    }
+    //通过二分法查找
+    static Long timeList(List lst){
+        long start = System.currentTimeMillis();
+        for(int i = 0; i < N; i++) {
+            int index = Collections.binarySearch(lst, values.get(i));
+            if(index != i){
+                System.out.println("***错误***");
+            }
+        }
+        return System.currentTimeMillis() - start;
+    }
+    public static void main(String[] args) {
+        System.out.println("ArrayList消耗时间："+timeList(new ArrayList(values)));
+        System.out.println("LinkedList消耗时间："+timeList(new LinkedList(values)));
+    }
+}
+```
+　　得到的输出是：
+```
+Arraylist消耗时间：5
+LinkedList消耗时间：83
+```
+　　这个结果不是固定的，但基本上ArrayList的时间要明显小于LinkedList的时间。因此在这种情况下不宜用LinkedList。二分查找法使用的随机访问（random access）策略，而LinkedList是不支持快速的随机访问的。对一个LinkedList做随机访问所消耗的时间与这个list的大小是成比例的。而相应的，在ArrayList中进行随机访问所消耗的时间是固定的。  
+　　这是否表明ArrayList总是比LinkedList性能要好呢？这并不一定，在某些情况下LinkedList的表现要优于ArrayList，有些算法在LinkedList中实现时效率更高。比方说，利用`Collections.reverse()`方法对列表进行反转时，其性能就要好些。看这样一个例子，假如我们有一个列表，要对其进行大量的插入和删除操作，在这种情况下LinkedList就是一个较好的选择。请看如下一个极端的例子，我们重复在一个列表的开端插入一个元素：
+```java
+public class TestList2 {
+    static final int N = 50000;
+    static long timeList(List list) {
+        long start = System.currentTimeMillis();
+        Object o = new Object();
+        for(int i = 0; i < N; i++)
+            list.add(0, o);
+        return System.currentTimeMillis()-start;
+    }
+    public static void main(String[] args) {
+        System.out.println("ArrayList消耗时间："+timeList(new ArrayList()));
+        System.out.println("LinkedList消耗时间："+timeList(new LinkedList()));
+    }
+}
+```
+　　这时我们的输出结果是：
+```
+ArrayList消耗时间：213
+LinkedList消耗时间：5
+```
+　　二、空间复杂度
+　　在LinkedList中有一个私有的内部类，定义如下：
+```java
+private static class Entry {
+    Object element;
+    Entry next;
+    Entry previous;
+}
+```
+　　每个Entry对象reference列表中的一个元素，同时还有在LinkedList中它的上一个元素和下一个元素。一个有1000个元素的LinkedList对象将有1000个链接在一起的Entry对象，每个对象都对应于列表中的一个元素。这样的话，在一个LinkedList结构中将有一个很大的空间开销，因为它要存储这1000个Entry对象的相关信息。  
+　　ArrayList使用一个内置的数组来存储元素
