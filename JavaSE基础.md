@@ -807,3 +807,47 @@ class Bussiness{
 　　　　- 订单处理包含一系列操作：减少库存量、增加一条流水台账、修改总账，这几个操作要在同一个事务中完成，通常也即同一个线程中进行处理，如果累加公司应收账款的操作失败了，则应该把前面的操作回滚，否则，提交所有操作，这些操作使用相同的数据库连接对象，而这些操作的代码分别位于不用的模块中  
 　　　　- 银行转账包含一系列操作：把转出账户的余额减少，把转入账户的余额增加，这两个操作要在同一个事务中完成，它们必须使用相同的数据库连接对象，转入和转出操作的代码分别是两个不同的账户对象的方法。
 　　　　- 例如Strus2的ActionContext，同一段代码被不同的线程调用运行时，该代码操作的数据是每一个线程各自的状态和数据，对于不同的线程来说，getContext方法拿到的对象都不相同，对同一个线程来说，不管调用getContext方法多少次和在哪个模块中调用getContext方法，拿到的都是同一个。  
+　　1、ThreadLocal的使用方式  
+　　（1）在关联数据类中创建`private static ThreadLocal`  
+　　　　在下面的类中，私有静态ThreadLocal实例（serialNum）为调用该类的静态`SerialNum.get()`方法的每个线程维护了一个“序列号”，该方法将返回当前线程的序列号。（线程的序列号是在第一次调用`SerialNum.get()`时分配的，并在后续调用中不会更改。）  
+```java
+public class SerialNum {
+    //The next serial num to be assigned
+    private static int nextSerialNum = 0;
+    private static ThreadLocal serial = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return new Integer(nextSerialNum++);
+        }
+    };
+    public static int get() {
+        return ((Integer) (serialNum.get())).intValue;
+    }
+}
+```
+　　另一个例子，也是私有静态ThreadLocal实例：
+```java
+public class ThreadContext {
+    private String userId;
+    private Long transactionId;
+
+    private static ThreadLocal threadLocal = new ThreadLocal() {
+        @override
+        protected ThreadContext initialValue() {
+            return new ThreadContext();
+        }
+    };
+    public static ThreadContext get() {
+        return threadLocal.get();
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+    public Long getTransactionId() {
+        return transactionId;
+    }
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
+    }
+}
+```
