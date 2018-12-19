@@ -354,7 +354,7 @@ class DateFormatTest {
 　　注意：基于序列化和反序列化实现的克隆不仅仅是深度克隆，更重要的是通过泛型限定，可以检查出要克隆的对象是否支持序列化，这项检测是编译器完成的，不是在运行时抛出异常，这种方案明显优于使用Object类的clone方法克隆对象。让问题在编译的时候暴露出来总是好过把问题留到运行时。
 ### 6、什么是Java序列化，如何实现Java序列化
 　　序列化就是一种用来处理对象流的机制，所谓对象流也就是将对象的内容进行流化。可以对流化后的对象进行读写操作，也可以将流化后的对象传输于网络之间。序列化是为了解决在对象进行读写操作时引发的问题。  
-　　序列化的实现：将需要被序列化的类实现 Serializable 接口，该接口没有需要实现的方法，`implments Serializable`只是为了标注该对象时可被序列化的，然后使用一个输出流（如：FileOutputStream）来构造一个ObjectOutputStream（对象流）对象，接着，使用ObjectOutputStream对象的writerObject(Object obj)方法就可以将参数为obj的对象写出（即保存其状态），要恢复的话则用输入流。
+　　序列化的实现：将需要被序列化的类实现 Serializable 接口，该接口没有需要实现的方法，`implements Serializable`只是为了标注该对象时可被序列化的，然后使用一个输出流（如：FileOutputStream）来构造一个ObjectOutputStream（对象流）对象，接着，使用ObjectOutputStream对象的writerObject(Object obj)方法就可以将参数为obj的对象写出（即保存其状态），要恢复的话则用输入流。
 ## 八、Java的集合
 ### 1、HashMap排序题，上机题。（这题很重要）
 　　已知一个HashMap<Integer, User>集合，User有name(String)和age(int)属性。请写一个方法实现对HashMap的排序功能，该方法接收HashMap<INteger, User>为形参，返回类型为HashMap<Integer, User>，要求HashMap中的User的age倒序进行排序。排序时key=value键值对不得拆散。  
@@ -850,4 +850,42 @@ public class ThreadContext {
         this.transactionId = transactionId;
     }
 }
+```
+**补充：在JDK的API对ThreadLocal私有化的说明。并举例‘线程唯一标识符’UniqueThreadIDGenerator**  
+　　（5）多线程共享数据  
+　　在Java传统线程机制中的共享数据分式，大致可以简单分为两种情况：  
+　　- **多个线程行为一致，共同操作一个数据源。** 也就是每个线程执行相同的代码，可以只用同一个Runnable对象，这个Runnable对象中有那个共享数据，例如，卖票系统可以这么做。  
+　　- **多个线程行为不一致，共同操作一个数据源。** 也就是每个线程执行的代码不同，这个时候需要用不同的Runnable对象。例如，银行存款。  
+　　下面我们通过两个示例代码来分别说明这两种方式。  
+　　1、多个线程行为一致共同操作一个数据。  
+　　如果每个线程执行的代码相同，可以使用一个Runnable对象，这个Runnable对象中有那个共享数据，例如，卖票系统就可以这么做。  
+```java
+/**
+ *共享数据类
+ **/
+ class ShareDate {
+    private int num = 10;
+    public synchronized void inc() {
+        num++;
+        System.out.println(Thread.currentThread().getName()+":invoke inc method num ="+num);
+        try{
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+    }
+ }
+ /**
+  *多线程类
+  */
+  class RunnableCusToInc implements Runnable {
+      private ShareDate shareDate;
+      public RunnableCusToInc(ShareDate date) {
+          thid.shareDate = date;
+      }
+      @override
+      public void run() {
+          
+      }
+  }
 ```
