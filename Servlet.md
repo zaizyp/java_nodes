@@ -31,3 +31,64 @@ ServletConfig getServletConfig;
 　　- getServletINFO：该方法返回Servlet的描述。可以返回可能有用的任意字符串，甚至可能是null。  
 　　- getServletConfig：该方法返回由Servlet容器传给init方法的ServletConfig。但是，为了让getServletConfig返回非null值，你肯定已经为init方法的ServletConfig赋给了一个类级变量。  
 　　必须注意的一点是线程安全性。一个应用程序中的所有用户将共用一个Servlet实例，因此不建议使用类级别变量，除非它们是只读的，或者是java.util.concurrent.atomic包中的成员    
+### 3、ServletRequest
+　　对于每一个HTTP请求，Servlet容器都会创建一个ServletRequest实例，并将它传给Servlet的service方法。ServletRequest封装有关请求的信息。  
+　　下面是ServletRequest接口中的部分方法：
+　　`public int getContextLength()`  
+　　返回请求主体中的字节数。如果不知福字节的长度，该方法将返回-1  
+　　`public java.lang.String getContentType()`  
+　　返回请求主体的MIME类型，如果不知道类型，则返回null  
+　　`public java.lang.String getProtocol()`
+　　返回这个 HTTP请求的协议名称和版本号  
+　　`public String getParameter(String name)`  
+　　是ServletRequest中最常用的方法，该方法通常用来返回一个HTML表单域中的值。  
+### 4、ServletRequest
+　　javax.servlet.ServletResponse 接口表示一个Servlet响应。在调用一个Servlet的service方法之前，Servlet容器会先创建一个ServletResponse对象，并将它作为第二个参数传给service方法。ServletResponse隐藏了将响应发给浏览器的复杂性。  
+　　ServletResponse中定义的一个getWriter 方法，它返回可以将文本传给客户端的java.io.PrintWriter。在默认情况下，PrintWriter对象采用的是ISO-8859-1编码。  
+　　在将响应发送给客户端时，通常将它作为HTML发送。  
+　　提示：还有一个方法可以用来将输出传送给浏览器：getOutputStream。但是这个方法是用来传输二进制数据的，因此在大多数时候，需要使用getWriter。  
+　　在发送任何HTML标签之前，应该先通过调用setContextType方法来设置响应的内容类型，比如，将text/html作为参数传递，这是在告诉浏览器内容类型为HTML。如果没有设置内容类型，那么大多数浏览器将会默认以HTML的形式显示响应的内容。但是，如果没有设置响应的内容类型，有些浏览器则会将HTML标签显示为普通文本。  
+### 5、ServletConfig
+　　在Servlet容器初始化Servlet时，Servlet容器将ServletConfig传给Servlet的init方法。ServletConfig封装可以通过@WebServlet或者部署描述符传给一个Servlet的配置信息。以这种方式传递的每一条信息都称作初始参数。初始参数有两个部分组成：键和值。  
+　　为了从一个Servlet内部获取某个初始参数的值，应该在由Servlet容器传给Servlet的init方法的ServletConfig中调用getInitParameter方法。getInitParameter方法的签名如下：  
+　　`String getParameter(String name)`  
+　　此外。getInitParameterNames 方法则返回所有初始参数名称的一个Enumeration：  
+　　`Enumeration<String> getInitParameterNames()`  
+　　除了getInitParameter和getInitParameterNames之外，ServletConfig还提供了另一个很有用的方法：getServletContext。可以利用这个方法从Servlet内部获取ServletContext。  
+### 6、ServletContext
+　　ServletContext表示Servlet应用程序。每个Web应用程序只有一个Context。在分布式环境中，一个应用程序同时部署到多个容器中，并且每台Java虚拟机都有一个ServletContext对象。  
+　　在ServletConfig中调用getServletContext方法可以获得ServletContext。  
+　　有了ServletContext之后，就可以共享能通过应用程序的所有资源访问的信息，促进Web对象的动态注册，前者是通过将一个内部Map中的对象保存在ServletContext中来实现的。保存在ServletContext中的对象称作属性（attribute）。  
+　　ServletContext中的下列方法是用于处理属性的：  
+```java
+java.lang.Object getAttribute(java.lang.String name);
+java.util.Enumeration<java.lang.String> getAttributeNames();
+void setAttribute(java.lang.String name, java.lang.Object object);
+void removeAttribute(java.lang.String);
+```
+### 7、GenericServlet
+　　实现了Servlet和ServletConfig，并完成以下工作：  
+　　- 将init方法中的ServletConfig赋给了一个类级变量，使它可以通过调用getServletConfig来获取。  
+　　- 为Servlet接口中的所有方法提供默认实现。  
+　　- 提供方法来包装ServletConfig中的方法。  
+### 8、HTTPServlet
+　　我们所编写的Servlet应用程序，大多数都要用到HTTP。javax.servlet.http包是Servlet  API中的第二个包，其包含了编写Servlet应用程序的类和接口。javax.servlet.http中的许多类型覆盖了javax.servlet中的类型。  
+　　javax.servlet.http中的主要类型：  
+　　HttpServlet、HttpServletRequest、HttpServletResponse、HttpSession、Cookie  
+#### 8.1、HttpServlet
+　　HttpServlet类继承了GenericServlet类。在使用HttpServlet时，还要使用HttpServletRequest和HttpServletResponse对象，他们分别表示Servlet请求和Servlet响应。它们分别继承ServletRequest和ServletResponse。
+　　HttpServlet覆盖GenericServlet中的service方法，并且还使用`void service(HttpServletRequest request, HttpServletResponse responce)`重载了了该方法。  
+　　Servlet容器还是会调用javax.servlet.Servlet中原始的service方法，HttpServlet中的service方法要如下这么写：
+```java
+public void service(ServletRequest req, ServletResponse res) throws ServletExcept, IOException {
+    HttpServletRequest request;
+    HttpServletResponse responce;
+    try {
+        request = (HttpServletRequest) req;
+        responce = (HttpServletResponse) res;
+    } catch (ClassCastException e) {
+        throws new ServletException("non-HTTP request or responce");
+    }
+    service(request, responce);
+}
+```
