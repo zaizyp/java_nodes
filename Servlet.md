@@ -92,3 +92,5 @@ public void service(ServletRequest req, ServletResponse res) throws ServletExcep
     service(request, responce);
 }
 ```
+　　原始的service方法将请求和响应对象进行向下转换，分别从Servlet容器转换成HttpServletRequest和HttpServletResponse，并调用新的service方法。向下转换总是会成功，因为在调用一个Servlet的service方法时，Servlet容器总会预计使用HTTP，所以传递一个HttpServletRequest和一个HttpServletResponse。即使正在实现javax.servlrt.Servlet接口或者基础java.servlet.GenericServlet，也可以将传给service方法的Servlet请求和Servlet响应，分别向下转换成HttpServletRequest和HttpServletResponse。
+　　之后，HttpServlet中新的service方法会查看通常用来发送请求（通过Request.getMethod）的Http方法，并调用以下某个方法（doGet、doPost、doHead、doPut、doTrace、doOptions和doDelete），这7个方法各自表示一个HTTP方法。
