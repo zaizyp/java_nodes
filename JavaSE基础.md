@@ -128,7 +128,7 @@ public int getNum(){
 　　2) finally：异常处理语句结构的一部分，表示总是执行
 　　3) finalize：Object类的一个方法，在垃圾回收器执行的时候会调用被回收对象的此方法，可以覆盖此方法提供垃圾收集时的其它资源回收，例如关闭文件等。该方法更像是一个对生命周期的临终方法，当该方法被系统调用则代表该对象即将“死亡”，但需要注意的是，我们主动行为上去调用该方法并不会导致该对象“死亡”，这是一个被动得分（其实就是回调方法），不需要我们调用。
 ## 五、JavaSE常用API
-### 1、`Math.round(11.5)`等于多少？`Math.round(-15)`又等于多少
+### 1、`Math.round(11.5)`等于多少？`Math.round(-11.5)`又等于多少
 　　`Math.round(11.5)`的返回值是12，`Math.round(-11.5)`的返回值是-11.四舍五入的原理是在参数上加上0.5然后进行取整
 ### 2、switch是否能作用在byte上，是否能作用在long上，是否能作用在String上？
 　　在Java5以前stitch(expr)中，expr只能是byte、short、char、int。从Java5开始，Java中引入了枚举类型，expr也可以是enum类型。从Java7开始，expr也可以是String对象。

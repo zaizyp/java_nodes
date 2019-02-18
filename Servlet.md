@@ -38,7 +38,7 @@ ServletConfig getServletConfig;
 　　返回请求主体中的字节数。如果不知福字节的长度，该方法将返回-1  
 　　`public java.lang.String getContentType()`  
 　　返回请求主体的MIME类型，如果不知道类型，则返回null  
-　　`public java.lang.String getProtocol()`
+　　`public java.lang.String getProtocol()`  
 　　返回这个 HTTP请求的协议名称和版本号  
 　　`public String getParameter(String name)`  
 　　是ServletRequest中最常用的方法，该方法通常用来返回一个HTML表单域中的值。  
@@ -94,3 +94,50 @@ public void service(ServletRequest req, ServletResponse res) throws ServletExcep
 ```
 　　原始的service方法将请求和响应对象进行向下转换，分别从Servlet容器转换成HttpServletRequest和HttpServletResponse，并调用新的service方法。向下转换总是会成功，因为在调用一个Servlet的service方法时，Servlet容器总会预计使用HTTP，所以传递一个HttpServletRequest和一个HttpServletResponse。即使正在实现javax.servlrt.Servlet接口或者基础java.servlet.GenericServlet，也可以将传给service方法的Servlet请求和Servlet响应，分别向下转换成HttpServletRequest和HttpServletResponse。
 　　之后，HttpServlet中新的service方法会查看通常用来发送请求（通过Request.getMethod）的Http方法，并调用以下某个方法（doGet、doPost、doHead、doPut、doTrace、doOptions和doDelete），这7个方法各自表示一个HTTP方法。
+
+
+## 二、JSP
+
+## 三、EL
+### 1、applicationScope、sessionScope、requestScope及pageScope
+　　利用隐式对象applicationScope获得一个application范围的变量值。例如，如果你有一个application范围的变量myVar，就可以利用下面这个表达式来访问该属性：  
+　　${applicationScope.myVar}  
+　　注意，在Servlet/JSP编程中，有些作用范围的对象是指放在以下这些对象中作为属性的对象：PageContext、ServletRequest、HttpSession或者ServletContext。隐式对象sessionScope、requestScope及pageScope与applicationScope相识。但是其范围分别是session、request及page。  
+　　有作用范围的对象也可以用一个没有指定范围的EL表达式进行访问。在这种情况下JSP容器将会返回在PageContext、ServletRequest、HttpSession或者ServletContext中第一次识别到的指定对象。搜索顺序从最小范围（PageContext）开始，到最大范围（ServletContext）。例如，下面的表达式将返回任意范围的today所引用的对象：  
+　　${today}
+### 2、其他EL运算符
+#### 2.1 算术运算符
+　　算术运算符有5个：
+　　- 加法（+）  
+　　- 减法（-）  
+　　- 乘法（* ）    
+　　- 除法（/和div）
+　　- 余数/模（%和mod）
+#### 2.2、关系运算符
+　　- 等于（==和eq）  
+　　- 不等于（!=和ne）  
+　　- 大于（>和gt）  
+　　- 大于或等于（>=和ge）  
+　　- 小于（<和lt）  
+　　- 小于或等于（<=和le）  
+　　例如，表达式${3==4}将返回false，${"b"<"d"}将返回true。
+#### 2.3、逻辑运算符
+　　- AND（&&和and）
+　　- OR（||和or）  
+　　- NOT（!和not）
+#### 2.4、条件运算符
+　　${statement? A:B}
+#### 2.5、empty运算符
+　　empty运算符用来检测一个值是否为null或者为空。下面举一个使用empty运算符的例子：
+　　${empty X}
+
+## 四、JSTL
+### 1、forEach
+#### 1.1、varStatus属性
+　　- current：当前这次迭代的项  
+　　- index：当前这次迭代从0开始的迭代计数  
+　　- count：当前这次迭代从1开始的迭代计算  
+　　- first：用来表明当前这轮迭代是否为第一次迭代的标志，返回true/false  
+　　- last：用来表明当前这轮迭代是否为最后一次迭代的标志，返回true/false  
+
+　　
